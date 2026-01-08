@@ -16,10 +16,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/JoshuaSkootsky/bun-agent-factory"
+    "url": "git+https://github.com/JoshuaSkootsky/craft.git"
   },
   "license": "MIT",
-  "keywords": ["bun", "agent", "ai", "cli", "coding"],
+  "keywords": [
+    "bun",
+    "agent",
+    "ai",
+    "cli",
+    "coding"
+  ],
   "scripts": {
     "build": "bun build src/agent.ts --outdir dist --target bun && bun build src/setup.ts --outdir dist --target bun",
     "dev": "bun run src/agent.ts",
