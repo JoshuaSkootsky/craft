@@ -1,0 +1,57 @@
+# craft
+
+An autonomous coding agent built with Bun. Give it a goal and watch it write code for you.
+
+## Install
+
+```bash
+bun install -g @skootsky/craft
+```
+
+## Usage
+
+```bash
+# Run the agent with a task
+craft "write a CLI timer in Rust"
+
+# With context
+craft "add tests" --context=/path/to/project
+```
+
+## Setup
+
+1. Copy `.env.example` to `.env`
+2. Add at least one API key:
+   - `API_KEY_OPENAI` for OpenAI
+   - `API_KEY_CLAUDE` for Anthropic Claude
+   - `API_KEY_ZEN` for Open Code Zen
+
+3. Set `DEFAULT_PROVIDER` env var to skip provider selection (optional)
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `craft "<goal>"` | Run the agent with a task |
+| `bun run build` | Build for distribution |
+| `bun run dev` | Run from source (fast iteration) |
+
+## Project Structure
+
+```
+src/
+  agent.ts      # Main CLI entry point
+  client.ts     # LLM client wrapper
+  memory.ts     # Persistent scratchpad for agent state
+  picker.ts     # Provider selection
+  providers.ts  # Available LLM providers
+```
+
+## Features
+
+- **Native Bun parsing**: Uses `process.argv` instead of commander
+- **Memory system**: Tracks task, steps, and results across iterations
+- **Multi-provider support**: OpenAI, Claude, and Zen integration
+- **Structured logging**: Wide, canonical event logging throughout
+
+This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

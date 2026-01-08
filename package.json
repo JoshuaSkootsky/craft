@@ -1,0 +1,37 @@
+{
+  "name": "@skootsky/craft",
+  "version": "0.1.0",
+  "description": "An autonomous coding agent that writes code for you",
+  "module": "dist/agent.js",
+  "type": "module",
+  "bin": {
+    "craft": "dist/agent.js",
+    "craft-setup": "dist/setup.js"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoshuaSkootsky/bun-agent-factory"
+  },
+  "license": "MIT",
+  "keywords": ["bun", "agent", "ai", "cli", "coding"],
+  "scripts": {
+    "build": "bun build src/agent.ts --outdir dist --target bun && bun build src/setup.ts --outdir dist --target bun",
+    "dev": "bun run src/agent.ts",
+    "prepublishOnly": "bun run build"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
+}
