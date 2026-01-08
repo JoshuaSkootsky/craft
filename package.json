@@ -1,6 +1,6 @@
 {
   "name": "@skootsky/craft",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "An autonomous coding agent that writes code for you",
   "module": "dist/agent.js",
   "type": "module",
