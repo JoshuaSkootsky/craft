@@ -14,13 +14,17 @@ interface Choice {
   label: string;
 }
 
-const choices: Choice[] = [
-  { provider: 'openai' as Provider, key: process.env.API_KEY_OPENAI!, label: 'OpenAI' },
-  { provider: 'claude' as Provider, key: process.env.API_KEY_CLAUDE!, label: 'Anthropic' },
-  { provider: 'zen' as Provider,    key: process.env.API_KEY_ZEN!,    label: 'Open Code Zen' },
-];
+function isValidKey(key: string | undefined): key is string {
+  return typeof key === 'string' && key.trim().length > 0;
+}
 
-export const AVAILABLE = choices.filter(c => c.key);
+const choices: Choice[] = [
+  { provider: 'openai' as Provider, key: process.env.API_KEY_OPENAI, label: 'OpenAI' },
+  { provider: 'claude' as Provider, key: process.env.API_KEY_CLAUDE, label: 'Anthropic' },
+  { provider: 'zen' as Provider,    key: process.env.API_KEY_ZEN,    label: 'Open Code Zen' },
+].filter((c): c is Choice => isValidKey(c.key));
+
+export const AVAILABLE = choices;
 
 if (AVAILABLE.length === 0) {
   console.error(

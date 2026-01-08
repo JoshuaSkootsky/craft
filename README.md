@@ -1,6 +1,10 @@
 # craft
 
-An autonomous coding agent built with Bun. Give it a goal and watch it write code for you.
+An coding agent built with Bun, mostly on top of the Zen/Opencode API.
+
+Give it a goal and watch it write code for you.
+
+
 
 ## Install
 
@@ -52,6 +56,7 @@ src/
 - **Native Bun parsing**: Uses `process.argv` instead of commander
 - **Memory system**: Tracks task, steps, and results across iterations
 - **Multi-provider support**: OpenAI, Claude, and Zen integration
+- **Cost estimates** for [Zen (Opencode) models](https://opencode.ai/docs/zen/). 
 - **Structured logging**: Wide, canonical event logging throughout
 
 This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

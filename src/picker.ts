@@ -1,22 +1,19 @@
 import { AVAILABLE, type Provider } from './providers';
+import { isModelFree } from './client.js';
 
-const FREE_MODELS = ['grok-code', 'big-pickle', 'minimax-m2.1-free', 'glm-4.7-free', 'gpt-5-nano'];
-
-interface ZenModel {
+export interface ZenModel {
   id: string;
   object: string;
   created: number;
   owned_by: string;
+  pricing?: {
+    prompt?: string;
+    completion?: string;
+  };
+  context_length?: number;
 }
 
-export interface ProviderChoice {
-  provider: Provider;
-  key: string;
-  label: string;
-  model?: string;
-}
-
-async function fetchZenModels(): Promise<string[]> {
+export async function fetchZenModels(): Promise<ZenModel[]> {
   const zenProvider = AVAILABLE.find(p => p.provider === 'zen');
   if (!zenProvider) return [];
 
@@ -28,28 +25,60 @@ async function fetchZenModels(): Promise<string[]> {
     });
     if (!response.ok) return [];
     const data = await response.json() as { data: ZenModel[] };
-    const allModels = data.data?.map(m => m.id) || [];
-    return allModels.filter(m => FREE_MODELS.includes(m));
+    return data.data || [];
   } catch {
-    return FREE_MODELS;
+    return [];
   }
 }
 
-function displayModels(models: string[]): void {
-  console.log('\nAvailable Zen models (free):');
-  models.forEach((model, i) => {
-    console.log(`  ${i + 1}. ${model}`);
+function displayModels(models: ZenModel[]): void {
+  const sortedModels = [...models].sort((a, b) => {
+    const aFree = isModelFree(a.id);
+    const bFree = isModelFree(b.id);
+    if (aFree && !bFree) return -1;
+    if (!aFree && bFree) return 1;
+    return a.id.localeCompare(b.id);
+  });
+
+  console.log('\nAvailable models:');
+  sortedModels.forEach((model, i) => {
+    const badge = isModelFree(model.id) ? '[free]' : '';
+    console.log(`  ${i + 1}. ${model.id} ${badge}`);
   });
 }
 
 async function readLine(): Promise<string> {
-  try {
-    const file = Bun.file('/dev/stdin');
-    const text = await file.text();
-    return text.trim();
-  } catch {
-    return '';
+  const chunks: Uint8Array[] = [];
+  const stream = Bun.stdin.stream();
+  const reader = stream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    const text = new TextDecoder().decode(concatArrays(chunks));
+    if (text.includes('\n')) {
+      return text.split('\n')[0]?.trim() || '';
+    }
   }
+  return new TextDecoder().decode(concatArrays(chunks)).split('\n')[0]?.trim() || '';
+}
+
+function concatArrays(arrays: Uint8Array[]): Uint8Array {
+  const total = arrays.reduce((sum, a) => sum + a.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
+}
+
+export interface ProviderChoice {
+  provider: Provider;
+  key: string;
+  label: string;
+  model?: string;
 }
 
 export async function pickProvider(): Promise<ProviderChoice> {
@@ -59,7 +88,14 @@ export async function pickProvider(): Promise<ProviderChoice> {
   if (AVAILABLE.length === 1) {
     const provider = AVAILABLE[0]!;
     if (provider.provider === 'zen') {
-      const models = await fetchZenModels();
+      let models = await fetchZenModels();
+      models = [...models].sort((a, b) => {
+        const aFree = isModelFree(a.id);
+        const bFree = isModelFree(b.id);
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return a.id.localeCompare(b.id);
+      });
       displayModels(models);
 
       let selectedIndex = 0;
@@ -72,7 +108,7 @@ export async function pickProvider(): Promise<ProviderChoice> {
         }
       }
 
-      const selectedModel = models[selectedIndex] || models[0];
+      const selectedModel = models[selectedIndex]?.id || models[0]?.id;
       console.log(`Using ${selectedModel}\n`);
 
       return {
