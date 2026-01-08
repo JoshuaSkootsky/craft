@@ -6,30 +6,27 @@ loadUserEnv();
 
 if (existsSync('.env')) config();
 
-export type Provider = 'openai' | 'claude' | 'zen';
+export type Provider = 'zen';
 
-interface Choice {
+export interface ProviderChoice {
   provider: Provider;
   key: string;
   label: string;
 }
 
-function isValidKey(key: string | undefined): key is string {
-  return typeof key === 'string' && key.trim().length > 0;
-}
+const ZEN_KEY = process.env.API_KEY_ZEN;
 
-const choices: Choice[] = [
-  { provider: 'openai' as Provider, key: process.env.API_KEY_OPENAI, label: 'OpenAI' },
-  { provider: 'claude' as Provider, key: process.env.API_KEY_CLAUDE, label: 'Anthropic' },
-  { provider: 'zen' as Provider,    key: process.env.API_KEY_ZEN,    label: 'Open Code Zen' },
-].filter((c): c is Choice => isValidKey(c.key));
-
-export const AVAILABLE = choices;
-
-if (AVAILABLE.length === 0) {
+if (!ZEN_KEY) {
   console.error(
-    'No usable LLM keys found.\n' +
-    'Run craft-setup to configure, or add keys to ~/.config/craft/.env'
+    'No Zen API key found.\n' +
+    'Add API_KEY_ZEN to ~/.config/craft/.env\n' +
+    'Get your key at https://opencode.ai/auth'
   );
   process.exit(1);
 }
+
+export const AVAILABLE: ProviderChoice[] = [{
+  provider: 'zen',
+  key: ZEN_KEY,
+  label: 'Open Code Zen'
+}];

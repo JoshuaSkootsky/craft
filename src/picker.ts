@@ -75,7 +75,7 @@ function concatArrays(arrays: Uint8Array[]): Uint8Array {
 }
 
 export interface ProviderChoice {
-  provider: Provider;
+  provider: 'zen';
   key: string;
   label: string;
   model?: string;

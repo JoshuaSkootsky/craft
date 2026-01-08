@@ -144,24 +144,16 @@ export function parseResponse(data: Record<string, any>): ParsedResponse {
   };
 }
 
-export function toolsFor(provider: Provider, key: string, model?: string) {
-  const selectedModel = model || getDefaultModel(provider);
+export function toolsFor(provider: 'zen', key: string, model?: string) {
+  const selectedModel = model || 'grok-code';
 
   return {
     chat: async (body: any) => {
-      const url = getEndpoint(provider, selectedModel);
+      const url = getEndpoint(selectedModel);
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
       };
-
-      if (provider === 'zen') {
-        headers['Authorization'] = `Bearer ${key}`;
-      } else if (provider === 'openai') {
-        headers['Authorization'] = `Bearer ${key}`;
-      } else if (provider === 'claude') {
-        headers['x-api-key'] = key;
-        headers['anthropic-version'] = '2023-06-01';
-      }
 
       const response = await fetch(url, {
         method: 'POST',
@@ -175,13 +167,13 @@ export function toolsFor(provider: Provider, key: string, model?: string) {
         try {
           const errorData = JSON.parse(errorText);
           const errorMsg = errorData?.error?.message || errorData?.message || errorText;
-          userMessage = `Server error from ${provider}: ${errorMsg}`;
+          userMessage = `Server error from zen: ${errorMsg}`;
         } catch {
           const errorMap: Record<number, string> = {
-            401: `Invalid API key for ${provider}. Check ~/.config/craft/.env`,
-            429: `Rate limit exceeded for ${provider}. Retrying...`,
-            404: `Model '${selectedModel}' not found for ${provider}`,
-            500: `Server error from ${provider}. Please try again.`,
+            401: `Invalid API key for zen. Check ~/.config/craft/.env`,
+            429: `Rate limit exceeded for zen. Retrying...`,
+            404: `Model '${selectedModel}' not found`,
+            500: `Server error from zen. Please try again.`,
             503: `Service unavailable. Please try again later.`
           };
           userMessage = errorMap[response.status] || `API error: ${response.status}`;
@@ -295,34 +287,21 @@ export function toolsFor(provider: Provider, key: string, model?: string) {
   };
 }
 
-function getDefaultModel(provider: Provider): string {
-  switch (provider) {
-    case 'zen': return 'grok-code';
-    case 'openai': return 'gpt-4o';
-    case 'claude': return 'claude-sonnet-4-5';
-  }
+function getDefaultModel(): string {
+  return 'grok-code';
 }
 
-function getEndpoint(provider: Provider, model: string): string {
-  if (provider === 'zen') {
-    if (CLAUDE_MODELS.includes(model)) {
-      return `${ZEN_BASE}/messages`;
-    }
-    if (GEMINI_MODELS.includes(model)) {
-      return `${ZEN_BASE}/models/${model}`;
-    }
-    if (RESPONSES_MODELS.includes(model)) {
-      return `${ZEN_BASE}/responses`;
-    }
-    return `${ZEN_BASE}/chat/completions`;
+function getEndpoint(model: string): string {
+  if (CLAUDE_MODELS.includes(model)) {
+    return `${ZEN_BASE}/messages`;
   }
-  if (provider === 'openai') {
-    return 'https://api.openai.com/v1/chat/completions';
+  if (GEMINI_MODELS.includes(model)) {
+    return `${ZEN_BASE}/models/${model}`;
   }
-  if (provider === 'claude') {
-    return 'https://api.anthropic.com/v1/messages';
+  if (RESPONSES_MODELS.includes(model)) {
+    return `${ZEN_BASE}/responses`;
   }
-  return '';
+  return `${ZEN_BASE}/chat/completions`;
 }
 
 async function globAsync(pattern: string): Promise<string[]> {

@@ -41,8 +41,49 @@ const LLM = async (prompt: string, tools: any, model: string) => {
 const parsePlan = (txt: string) =>
   JSON.parse(txt.match(/```json\s*([\s\S]*?)\s*```/)?.[1] || '[]');
 
-async function runAgent(goal: string, context?: string) {
-  const { provider, key, model } = await pickProvider();
+async function readMoreInput(): Promise<string> {
+  console.log('');
+  console.log('═'.repeat(50));
+  console.log('What would you like to do next?');
+  console.log('  - Press Enter to exit');
+  console.log('  - Type a new goal to continue');
+  console.log('═'.repeat(50));
+  console.log('');
+
+  const chunks: Uint8Array[] = [];
+  const stream = Bun.stdin.stream();
+  const reader = stream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    const text = new TextDecoder().decode(concatArrays(chunks));
+    if (text.includes('\n')) {
+      return text.split('\n')[0]?.trim() || '';
+    }
+  }
+  return new TextDecoder().decode(concatArrays(chunks)).split('\n')[0]?.trim() || '';
+}
+
+function concatArrays(arrays: Uint8Array[]): Uint8Array {
+  const total = arrays.reduce((sum, a) => sum + a.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
+}
+
+async function runAgent(goal: string, context?: string, reuseChoice?: { provider: 'zen'; key: string; model?: string }) {
+  let choice;
+  if (reuseChoice) {
+    choice = reuseChoice;
+  } else {
+    choice = await pickProvider();
+  }
+  const { provider, key, model } = choice;
   const tools = toolsFor(provider, key, model);
 
   console.log(`[agent] Goal: ${goal}`);
@@ -110,10 +151,11 @@ Return ONLY a JSON array of next tool calls (max 2) in a \`\`\`json\`\`\` block.
     if (plan.some((p: any) => ['generate', 'execute'].includes(p.tool))) break;
   }
   console.log('[agent] Done!');
+  return { provider, key, model };
 }
 
 const goal = process.argv.slice(2).join(' ');
-const context = process.argv.find((a) => a.startsWith('--context='))?.split('=')[1];
+let context = process.argv.find((a) => a.startsWith('--context='))?.split('=')[1];
 
 if (!goal) {
   const { provider, key, model } = await pickProvider();
@@ -203,4 +245,18 @@ Do NOT output JSON, markdown code blocks, or structured lists. Just speak natura
   process.exit(0);
 }
 
-await runAgent(goal, context);
+let currentGoal = goal;
+let reuseChoice: { provider: 'zen'; key: string; model?: string } | undefined;
+
+while (currentGoal) {
+  const choice = await runAgent(currentGoal, context, reuseChoice);
+  reuseChoice = choice;
+
+  const moreInput = await readMoreInput();
+  if (!moreInput) {
+    console.log('\n👋 Bye! Thanks for using craft.');
+    break;
+  }
+  currentGoal = moreInput;
+  context = undefined;
+}

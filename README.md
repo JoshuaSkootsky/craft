@@ -26,11 +26,13 @@ craft "add tests" --context=/path/to/project
 
 1. Copy `.env.example` to `.env`
 2. Add at least one API key:
-   - `API_KEY_OPENAI` for OpenAI
-   - `API_KEY_CLAUDE` for Anthropic Claude
    - `API_KEY_ZEN` for Open Code Zen
 
 3. Set `DEFAULT_PROVIDER` env var to skip provider selection (optional)
+
+Note: Multi model is very tempting, but also makes dialing in quality and taste very hard. I have attempted to split the difference by only doing OpenCode Zen models (which are a good collection!)
+
+You might want to focus on Anthropic or OpenAI models from your favorite providers. That's up to you. Getting this right is an important part of building with AI, they aren't all the same, and not all providers are the same.
 
 ## Commands
 

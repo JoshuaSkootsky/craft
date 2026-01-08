@@ -1,49 +1,25 @@
-import type { Provider } from './providers';
-
 const ZEN_BASE = 'https://opencode.ai/zen/v1';
 
-function getEndpoint(provider: Provider, model: string): string {
-  if (provider === 'zen') {
-    return `${ZEN_BASE}/chat/completions`;
-  }
-  if (provider === 'openai') {
-    return 'https://api.openai.com/v1/chat/completions';
-  }
-  if (provider === 'claude') {
-    return 'https://api.anthropic.com/v1/messages';
-  }
-  return '';
+function getEndpoint(): string {
+  return `${ZEN_BASE}/chat/completions`;
 }
 
-function getHeaders(provider: Provider, key: string): Record<string, string> {
-  const headers: Record<string, string> = {
+function getHeaders(key: string): Record<string, string> {
+  return {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${key}`,
   };
-
-  if (provider === 'zen' || provider === 'openai') {
-    headers['Authorization'] = `Bearer ${key}`;
-  } else if (provider === 'claude') {
-    headers['x-api-key'] = key;
-    headers['anthropic-version'] = '2023-06-01';
-  }
-
-  return headers;
 }
 
-function getDefaultModel(provider: Provider): string {
-  switch (provider) {
-    case 'zen': return 'grok-code';
-    case 'openai': return 'gpt-4o';
-    case 'claude': return 'claude-sonnet-4-5';
-  }
+function getDefaultModel(): string {
+  return 'grok-code';
 }
 
 export async function validateKeyWorks(
-  provider: Provider,
   key: string,
   model?: string
 ): Promise<{ valid: boolean; reason?: string }> {
-  const selectedModel = model || getDefaultModel(provider);
+  const selectedModel = model || getDefaultModel();
 
   try {
     const testPayload = {
@@ -52,8 +28,8 @@ export async function validateKeyWorks(
       max_tokens: 5,
     };
 
-    const url = getEndpoint(provider, selectedModel);
-    const headers = getHeaders(provider, key);
+    const url = getEndpoint();
+    const headers = getHeaders(key);
 
     const response = await fetch(url, {
       method: 'POST',
