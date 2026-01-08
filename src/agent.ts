@@ -42,38 +42,18 @@ const parsePlan = (txt: string) =>
   JSON.parse(txt.match(/```json\s*([\s\S]*?)\s*```/)?.[1] || '[]');
 
 async function readMoreInput(): Promise<string> {
-  console.log('');
-  console.log('═'.repeat(50));
-  console.log('What would you like to do next?');
-  console.log('  - Press Enter to exit');
-  console.log('  - Type a new goal to continue');
-  console.log('═'.repeat(50));
-  console.log('');
+  const iterator = process.stdin.iterator();
+  const result = await iterator.next();
 
-  const chunks: Uint8Array[] = [];
-  const stream = Bun.stdin.stream();
-  const reader = stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    const text = new TextDecoder().decode(concatArrays(chunks));
-    if (text.includes('\n')) {
-      return text.split('\n')[0]?.trim() || '';
-    }
+  if (result.done) {
+    return '';
   }
-  return new TextDecoder().decode(concatArrays(chunks)).split('\n')[0]?.trim() || '';
-}
 
-function concatArrays(arrays: Uint8Array[]): Uint8Array {
-  const total = arrays.reduce((sum, a) => sum + a.length, 0);
-  const result = new Uint8Array(total);
-  let offset = 0;
-  for (const arr of arrays) {
-    result.set(arr, offset);
-    offset += arr.length;
-  }
-  return result;
+  const decoder = new TextDecoder();
+  const line = result.value ? decoder.decode(result.value).trimEnd() : '';
+
+  await iterator.return?.();
+  return line;
 }
 
 async function runAgent(goal: string, context?: string, reuseChoice?: { provider: 'zen'; key: string; model?: string }) {

@@ -48,30 +48,14 @@ function displayModels(models: ZenModel[]): void {
 }
 
 async function readLine(): Promise<string> {
-  const chunks: Uint8Array[] = [];
-  const stream = Bun.stdin.stream();
-  const reader = stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    const text = new TextDecoder().decode(concatArrays(chunks));
-    if (text.includes('\n')) {
-      return text.split('\n')[0]?.trim() || '';
-    }
-  }
-  return new TextDecoder().decode(concatArrays(chunks)).split('\n')[0]?.trim() || '';
-}
+  const iterator = process.stdin.iterator();
+  const result = await iterator.next();
 
-function concatArrays(arrays: Uint8Array[]): Uint8Array {
-  const total = arrays.reduce((sum, a) => sum + a.length, 0);
-  const result = new Uint8Array(total);
-  let offset = 0;
-  for (const arr of arrays) {
-    result.set(arr, offset);
-    offset += arr.length;
-  }
-  return result;
+  const decoder = new TextDecoder();
+  const line = result.value ? decoder.decode(result.value).trimEnd() : '';
+
+  await iterator.return?.();
+  return line;
 }
 
 export interface ProviderChoice {

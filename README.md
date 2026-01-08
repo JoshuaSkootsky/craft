@@ -4,9 +4,17 @@ An coding agent built with Bun, mostly on top of the Zen/Opencode API.
 
 Give it a goal and watch it write code for you.
 
+```js
+// This is all an agent really is
+// everything else is traditional data plumbing
+`You are an autonomous coding agent.
+Goal: ${goal}
+Context: ${context || 'None'}
+So far: ${memory.results.join('; ') || 'Nothing'}`
+```
 
 
-## Install
+## Install This Tool Now
 
 ```bash
 bun install -g @skootsky/craft
@@ -34,13 +42,16 @@ Note: Multi model is very tempting, but also makes dialing in quality and taste 
 
 You might want to focus on Anthropic or OpenAI models from your favorite providers. That's up to you. Getting this right is an important part of building with AI, they aren't all the same, and not all providers are the same.
 
-## Commands
+## Commands and Local Development
 
 | Command | Description |
 |---------|-------------|
 | `craft "<goal>"` | Run the agent with a task |
 | `bun run build` | Build for distribution |
 | `bun run dev` | Run from source (fast iteration) |
+| `bun run test` | Run tests |
+
+
 
 ## Project Structure
 
